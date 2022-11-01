@@ -37,10 +37,8 @@ public class AssembledImage {
     }
 
     public void agentLaunch() {
-        double startTime = System.currentTimeMillis();
         AgentPass goToAgent = new AgentPass(assembledPixelsArray, calculatedPixelsArray);
-        goToAgent.calculateWithThreads(10);
-        System.out.println("Elapsed time: " + (System.currentTimeMillis() - startTime) + " ms");
+        goToAgent.calculateWithThreads(4);
         calculatedPixelsArray = goToAgent.getCalculatedPixelsArray();
         // return calculatedPixelsArray;
     }
