@@ -4,17 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="29c232ec-df11-4df0-86d4-943bb836d464" name="Changes" comment="Added full synchroni">
-      <change afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/uiDesigner.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/project/draw/AssembledImage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/project/draw/AssembledImage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/project/draw/processing/AgentPass.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/project/draw/processing/AgentPass.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/calculatedImages/calculatedImage.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/calculatedImages/calculatedImage.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/calculatedImages/calculatedImage3.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/calculatedImages/calculatedImage3.png" afterDir="false" />
-    </list>
+    <list default="true" id="29c232ec-df11-4df0-86d4-943bb836d464" name="Changes" comment="Added full synchroni" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -70,7 +60,7 @@
       <workItem from="1667123650937" duration="2427000" />
       <workItem from="1667216321880" duration="30309000" />
       <workItem from="1667309333601" duration="9799000" />
-      <workItem from="1667321750679" duration="11357000" />
+      <workItem from="1667321750679" duration="11881000" />
     </task>
     <task id="LOCAL-00001" summary="Init">
       <created>1667318283918</created>
