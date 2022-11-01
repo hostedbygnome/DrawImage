@@ -40,7 +40,6 @@ public class AssembledImage {
         AgentPass goToAgent = new AgentPass(assembledPixelsArray, calculatedPixelsArray);
         goToAgent.calculateWithThreads(4);
         calculatedPixelsArray = goToAgent.getCalculatedPixelsArray();
-        // return calculatedPixelsArray;
     }
 
     public void createCalculatedImage() {

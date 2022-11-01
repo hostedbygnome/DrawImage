@@ -52,7 +52,6 @@ public class AgentPass {
                 currentPixelsArray[currRow][currCol]++;
             }
             sumPixelsCurrentArray.getAndIncrement();
-            //System.out.println(sumPixelsCurrentArray.getAndIncrement());
         }
     }
 
@@ -118,11 +117,4 @@ public class AgentPass {
     public int[][] getCalculatedPixelsArray() {
         return currentPixelsArray;
     }
-
-
-//    @Override
-//    public int[][] call() throws Exception {
-//        calculateProcessedImage();
-//        return currentPixelsArray;
-//    }
 }
