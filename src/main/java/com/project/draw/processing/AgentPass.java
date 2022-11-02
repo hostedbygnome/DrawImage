@@ -1,17 +1,22 @@
 package com.project.draw.processing;
 
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicIntegerArray;
 
 public class AgentPass {
     private final int maxRow;
     private final int maxCol;
     private final int[][] referencePixelsArray;
-    private volatile int[][] currentPixelsArray;
-    Object mutex;
     public volatile AtomicInteger sumPixelsCurrentArray = new AtomicInteger(0);
+    Object mutex;
+    private final int[][] currentPixelsArray;
 
     public AgentPass(int[][] referencePixelsArray, int[][] currentPixelsArray) {
         this.referencePixelsArray = referencePixelsArray;
@@ -24,13 +29,19 @@ public class AgentPass {
     public void calculateWithThreads(int numberOfThreads) {
         double startTime = System.currentTimeMillis();
         ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
+        List<Future> futures = new ArrayList<>();
         for (int i = 0; i < numberOfThreads; i++) {
             final int threadId = i + 1;
-            executorService.submit(() -> calculateProcessedImage(threadId));
+            Future<Object> future = executorService.submit(() -> calculateProcessedImage(threadId));
+            futures.add(future);
         }
         executorService.shutdown();
+//        int ind = 0;
+//        while (!futures.get(ind).isDone()) {
+//        }
+//        executorService.shutdownNow();
         try {
-            if(!executorService.awaitTermination(50000, TimeUnit.MILLISECONDS)) {
+            if (!executorService.awaitTermination(50000, TimeUnit.MILLISECONDS)) {
                 executorService.shutdownNow();
             }
         } catch (InterruptedException e) {
@@ -39,13 +50,14 @@ public class AgentPass {
         System.out.println("Elapsed time: " + (System.currentTimeMillis() - startTime) + " ms");
     }
 
-    public void calculateProcessedImage(int threadId) {
+    public Object calculateProcessedImage(int threadId) {
         int sumPixelsReferenceArray = sumPixels(referencePixelsArray, 0, 0, maxRow, maxCol);
         int currRow = maxRow / threadId;
         int currCol = maxCol / threadId;
         while (sumPixelsCurrentArray.get() <= sumPixelsReferenceArray) {
             int[] nextCoords = calculateNecessaryCell(referencePixelsArray, currentPixelsArray, currRow, currCol,
-                    sumPixelsCurrentArray, sumPixelsReferenceArray);
+                    sumPixelsReferenceArray);
+            if (sumPixelsCurrentArray.get() > sumPixelsReferenceArray) return "OK";
             currRow = nextCoords[0];
             currCol = nextCoords[1];
             synchronized (mutex) {
@@ -53,13 +65,15 @@ public class AgentPass {
             }
             sumPixelsCurrentArray.getAndIncrement();
         }
+        return "OK";
     }
 
     public int[] calculateNecessaryCell(int[][] referenceArray, int[][] currentArray, int currRow, int currCol,
-                                        AtomicInteger sumCurrent, int sumReference) {
+                                        int sumReference) {
         int nextRow, nextCol;
+        if (sumPixelsCurrentArray.get() > sumReference) return new int[] {0, 0};
         List<List<Integer>> allSamples = calculateAllSample(referenceArray, currentArray, currRow,
-                currCol, sumCurrent, sumReference);
+                currCol, sumReference);
         Collections.shuffle(allSamples);
         Collections.sort(allSamples, Comparator.comparingInt(sample -> sample.get(0)));
         int index = 1;
@@ -74,13 +88,14 @@ public class AgentPass {
     }
 
     private List<List<Integer>> calculateAllSample(int[][] referenceArray, int[][] currentArray, int currRow, int currCol,
-                                                   AtomicInteger sumCurrent, int sumReference) {
+                                                   int sumReference) {
         int startRow = currRow - 1;
         int startCol = currCol - 1;
         int endRow = currRow + 1;
         int endCol = currCol + 1;
         int sumCurrentSquare = sumPixels(currentArray, startRow, startCol, endRow, endCol);
-        if (sumCurrent.get() == 0) sumCurrent.getAndSet(1);
+        if (sumPixelsCurrentArray.get() > sumReference) return new ArrayList<>();
+        if (sumPixelsCurrentArray.get() == 0) sumPixelsCurrentArray.getAndSet(1);
         List<List<Integer>> allSamples = new ArrayList<>();
         List<Integer> currSample = new ArrayList<>();
 
@@ -89,9 +104,10 @@ public class AgentPass {
             for (int j = startCol; j <= endCol; j++) {
                 currSample.clear();
                 if (i == currRow && j == currCol || j < 0 || j > maxCol) continue;
-                int differenceCriterion = Math.max(referenceArray[i][j] - sumReference / sumCurrent.get() * currentArray[i][j], 0);
-                int cellSample = sumCurrentSquare - differenceCriterion +
-                        Math.max(referenceArray[i][j] - sumReference / sumCurrent.get() * (currentArray[i][j] + 1), 0);
+                int differenceCriterion = Math.max(referenceArray[i][j] - sumReference /
+                        sumPixelsCurrentArray.get() * currentArray[i][j], 0);
+                int cellSample = sumCurrentSquare - differenceCriterion + Math.max(referenceArray[i][j] - sumReference /
+                        sumPixelsCurrentArray.get() * (currentArray[i][j] + 1), 0);
                 currSample.add(cellSample);
                 currSample.add(i);
                 currSample.add(j);
