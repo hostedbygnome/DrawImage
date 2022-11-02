@@ -4,10 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class AgentPass {
@@ -29,35 +26,47 @@ public class AgentPass {
     public void calculateWithThreads(int numberOfThreads) {
         double startTime = System.currentTimeMillis();
         ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
-        List<Future> futures = new ArrayList<>();
-        for (int i = 0; i < numberOfThreads; i++) {
-            final int threadId = i + 1;
-            Future<Object> future = executorService.submit(() -> calculateProcessedImage(threadId));
-            futures.add(future);
+        List<Callable<String>> tasks = new ArrayList<>();
+        try {
+            for (int i = 0; i < numberOfThreads; i++) {
+                int index = i;
+                tasks.add((Callable) () -> {
+                    final int threadId = index + 1;
+                    return calculateProcessedImage(threadId);
+                });
+            }
+            String result = executorService.invokeAny(tasks, 50000, TimeUnit.MILLISECONDS);
+            System.out.println(result);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } catch (TimeoutException e) {
+            throw new RuntimeException(e);
+        } finally {
+            executorService.shutdown();
         }
-        executorService.shutdown();
 //        int ind = 0;
 //        while (!futures.get(ind).isDone()) {
 //        }
 //        executorService.shutdownNow();
-        try {
-            if (!executorService.awaitTermination(50000, TimeUnit.MILLISECONDS)) {
-                executorService.shutdownNow();
-            }
-        } catch (InterruptedException e) {
-            executorService.shutdownNow();
-        }
+//        try {
+//            if (!executorService.awaitTermination(50000, TimeUnit.MILLISECONDS)) {
+//                executorService.shutdownNow();
+//            }
+//        } catch (InterruptedException e) {
+//            executorService.shutdownNow();
+//        }
         System.out.println("Elapsed time: " + (System.currentTimeMillis() - startTime) + " ms");
     }
 
-    public Object calculateProcessedImage(int threadId) {
+    public String calculateProcessedImage(int threadId) {
         int sumPixelsReferenceArray = sumPixels(referencePixelsArray, 0, 0, maxRow, maxCol);
         int currRow = maxRow / threadId;
         int currCol = maxCol / threadId;
         while (sumPixelsCurrentArray.get() <= sumPixelsReferenceArray) {
             int[] nextCoords = calculateNecessaryCell(referencePixelsArray, currentPixelsArray, currRow, currCol,
                     sumPixelsReferenceArray);
-            if (sumPixelsCurrentArray.get() > sumPixelsReferenceArray) return "OK";
             currRow = nextCoords[0];
             currCol = nextCoords[1];
             synchronized (mutex) {
@@ -65,13 +74,12 @@ public class AgentPass {
             }
             sumPixelsCurrentArray.getAndIncrement();
         }
-        return "OK";
+        return Thread.currentThread().getName();
     }
 
     public int[] calculateNecessaryCell(int[][] referenceArray, int[][] currentArray, int currRow, int currCol,
                                         int sumReference) {
         int nextRow, nextCol;
-        if (sumPixelsCurrentArray.get() > sumReference) return new int[] {0, 0};
         List<List<Integer>> allSamples = calculateAllSample(referenceArray, currentArray, currRow,
                 currCol, sumReference);
         Collections.shuffle(allSamples);
@@ -94,7 +102,6 @@ public class AgentPass {
         int endRow = currRow + 1;
         int endCol = currCol + 1;
         int sumCurrentSquare = sumPixels(currentArray, startRow, startCol, endRow, endCol);
-        if (sumPixelsCurrentArray.get() > sumReference) return new ArrayList<>();
         if (sumPixelsCurrentArray.get() == 0) sumPixelsCurrentArray.getAndSet(1);
         List<List<Integer>> allSamples = new ArrayList<>();
         List<Integer> currSample = new ArrayList<>();
